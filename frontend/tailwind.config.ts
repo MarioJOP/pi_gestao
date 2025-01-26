@@ -1,12 +1,12 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate"; // Importação explícita
 
 export default {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}", // Caminho corrigido para abranger todos os arquivos dentro de src
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -76,5 +76,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate], // Uso do plugin importado
 } satisfies Config;

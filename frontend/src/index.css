@@ -66,12 +66,19 @@
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
+/* Garante que a página ocupe 100% da altura */
+html, body {
+  height: 100%;
+  margin: 0;
 }
+
+/* Flexbox para garantir que o login fique centralizado */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: var(--background); /* Usa a cor do background definida */
+}
+
+

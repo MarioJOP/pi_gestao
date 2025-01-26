@@ -7,14 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import Header from "@/components/Header";
+// import Header from "@/components/Header";
 import { PackagePlus } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   description: z.string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
   category: z.string().min(1, "Selecione uma categoria"),
-  price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+  supplier: z.string().min(2, "Fornecedor deve ter pelo menos 2 caracteres"),
+  buy_price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Preço deve ser um número maior que 0",
+  }),
+  sale_price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Preço deve ser um número maior que 0",
   }),
   quantity: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0 && Number.isInteger(Number(val)), {
@@ -31,7 +35,9 @@ const ProductEntry = () => {
       name: "",
       description: "",
       category: "",
-      price: "",
+      supplier: "",
+      buy_price: "",
+      sale_price: "",
       quantity: "",
     },
   });
@@ -48,7 +54,9 @@ const ProductEntry = () => {
           name: values.name,
           description: values.description,
           category: values.category,
-          price: parseFloat(values.price),
+          supplier: values.supplier,
+          buy_price: parseFloat(values.buy_price),
+          sale_price: parseFloat(values.sale_price),
           quantity: parseInt(values.quantity, 10),
         }),
       });
@@ -78,7 +86,7 @@ const ProductEntry = () => {
 
   return (
     <div className="flex-1">
-      <Header />
+      {/* <Header /> */}
       <main className="p-8 overflow-auto">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
@@ -89,6 +97,7 @@ const ProductEntry = () => {
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
                 <FormField
                   control={form.control}
                   name="name"
@@ -145,12 +154,46 @@ const ProductEntry = () => {
                   )}
                 />
 
-                <FormField
+                  <FormField
                   control={form.control}
-                  name="price"
+                  name="supplier"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preço</FormLabel>
+                      <FormLabel>Fornecedor</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Digite o fornecedor" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="buy_price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço de Compra</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0,00"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                  <FormField
+                  control={form.control}
+                  name="sale_price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço de Venda</FormLabel>
                       <FormControl>
                         <Input
                           type="number"

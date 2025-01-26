@@ -11,10 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/Header";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const Stock = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState([]);
+  const [editProduct, setEditProduct] = useState(null); // Produto em edição
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // Controle do modal
 
   // Fetch produtos do backend
   const fetchProducts = async () => {
@@ -25,7 +29,6 @@ const Stock = () => {
       }
       const data = await response.json();
 
-      // Verifica se o retorno é um array válido
       if (!Array.isArray(data)) {
         throw new Error("Resposta inválida da API");
       }
@@ -35,7 +38,7 @@ const Stock = () => {
         title: "Erro",
         description: "Não foi possível carregar os produtos.",
       });
-      setProducts([]); // Define lista vazia em caso de erro
+      setProducts([]);
     }
   };
 
@@ -66,45 +69,47 @@ const Stock = () => {
     }
   };
 
-  // Atualizar preço do produto
-  const handleUpdatePrice = async (productId: number) => {
-    const newPrice = prompt("Digite o novo preço:");
-    if (newPrice && !isNaN(Number(newPrice))) {
-      try {
-        const response = await fetch(`http://localhost:8000/api/products/${productId}/`, {
-          method: "PATCH",
+  // Atualizar produto
+  const handleUpdateProduct = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/products/${editProduct.id}/`,
+        {
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ price: parseFloat(newPrice) }),
-        });
-
-        if (response.ok) {
-          const updatedProduct = await response.json();
-          setProducts(
-            products.map((product) =>
-              product.id === productId ? updatedProduct : product
-            )
-          );
-          toast({
-            title: "Preço atualizado",
-            description: `Preço do produto ${updatedProduct.name} foi atualizado para R$ ${newPrice}.`,
-          });
-        } else {
-          throw new Error("Erro ao atualizar o preço");
+          body: JSON.stringify(editProduct),
         }
-      } catch (error) {
+      );
+
+      if (response.ok) {
+        const updatedProduct = await response.json();
+        setProducts(
+          products.map((product) =>
+            product.id === updatedProduct.id ? updatedProduct : product
+          )
+        );
         toast({
-          title: "Erro",
-          description: "Não foi possível atualizar o preço do produto.",
+          title: "Produto atualizado",
+          description: `O produto "${updatedProduct.name}" foi atualizado com sucesso.`,
         });
+        setIsDialogOpen(false); // Fecha o modal
+      } else {
+        throw new Error("Erro ao atualizar o produto");
       }
-    } else {
+    } catch (error) {
       toast({
-        title: "Aviso",
-        description: "Preço inválido.",
+        title: "Erro",
+        description: "Não foi possível atualizar o produto.",
       });
     }
+  };
+
+  // Abrir modal para edição
+  const openEditModal = (product) => {
+    setEditProduct({ ...product }); // Clonar o produto para edição
+    setIsDialogOpen(true);
   };
 
   return (
@@ -118,7 +123,9 @@ const Stock = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome do Produto</TableHead>
-                <TableHead>Preço</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Preço de Compra</TableHead>
+                <TableHead>Preço de Venda</TableHead>
                 <TableHead>Quantidade</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -134,10 +141,16 @@ const Stock = () => {
                 products.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>{product.name}</TableCell>
+                    <TableCell>{product.category.charAt(0).toUpperCase() + product.category.slice(1)}</TableCell>
                     <TableCell>
-                      {product.price != null && !isNaN(Number(product.price))
-                        ? `R$ ${Number(product.price).toFixed(2)}`
-                        : "Preço indisponível"}
+                      {product.buy_price != null && !isNaN(Number(product.buy_price))
+                        ? `R$ ${Number(product.buy_price).toFixed(2)}`
+                        : "Preço de Compra indisponível"}
+                    </TableCell>
+                    <TableCell>
+                      {product.sale_price != null && !isNaN(Number(product.sale_price))
+                        ? `R$ ${Number(product.sale_price).toFixed(2)}`
+                        : "Preço de Venda indisponível"}
                     </TableCell>
                     <TableCell>{product.quantity || "Não especificado"}</TableCell>
                     <TableCell className="text-right">
@@ -145,7 +158,7 @@ const Stock = () => {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleUpdatePrice(product.id)}
+                          onClick={() => openEditModal(product)}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -164,6 +177,126 @@ const Stock = () => {
             </TableBody>
           </Table>
         </div>
+
+        {/* Modal de edição */}
+        {isDialogOpen && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="p-6 rounded-lg shadow-lg max-w-lg mx-auto bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-gray-800">
+                Editar Produto
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div>
+                <label
+                  htmlFor="productName"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Produto
+                </label>
+                <Input
+                  id="productName"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                  placeholder="Nome do produto"
+                  value={editProduct.name}
+                  onChange={(e) =>
+                    setEditProduct({ ...editProduct, name: e.target.value })
+                  }
+                />
+              </div>
+              
+              <div>
+                <label
+                  htmlFor="productName"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Fornecedor
+                </label>
+                <Input
+                  id="productName"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                  placeholder="Nome do produto"
+                  value={editProduct.supplier}
+                  onChange={(e) =>
+                    setEditProduct({ ...editProduct, name: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="buyPrice"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Preço de Compra
+                </label>
+                <Input
+                  id="buyPrice"
+                  type="number"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                  placeholder="Preço de compra"
+                  value={editProduct.buy_price}
+                  onChange={(e) =>
+                    setEditProduct({ ...editProduct, buy_price: parseFloat(e.target.value) })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="salePrice"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Preço de Venda
+                </label>
+                <Input
+                  id="salePrice"
+                  type="number"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                  placeholder="Preço de venda"
+                  value={editProduct.sale_price}
+                  onChange={(e) =>
+                    setEditProduct({ ...editProduct, sale_price: parseFloat(e.target.value) })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="quantity"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Quantidade
+                </label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                  placeholder="Quantidade"
+                  value={editProduct.quantity}
+                  onChange={(e) =>
+                    setEditProduct({ ...editProduct, quantity: parseInt(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex justify-end mt-6 space-x-4">
+              <Button
+                variant="secondary"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                onClick={handleUpdateProduct}
+              >
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       </div>
     </div>
   );
