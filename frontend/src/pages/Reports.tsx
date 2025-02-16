@@ -3,9 +3,27 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Reports = () => {
   const { toast } = useToast();
+
+  const navigate = useNavigate(); // Usando o hook useNavigate para redirecionamento
+  
+    // Função para verificar se o usuário está logado
+    const isUserLoggedIn = () => {
+      const token = localStorage.getItem("access_token");
+      return token !== null && token !== undefined;
+    };
+  
+    // Redirecionar para a página de login se o usuário não estiver logado
+    useEffect(() => {
+      if (!isUserLoggedIn()) {
+        navigate("/login"); // Substitua "/login" pelo caminho correto da sua página de login
+      }
+    }, [navigate]);
+  
 
   const handleExportCSV = async () => {
     try {
@@ -69,7 +87,7 @@ const Reports = () => {
 
   return (
     <div className="flex-1">
-       {/* <Header /> */}
+      <Header showSearchBar={false} />
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Relatórios</h1>

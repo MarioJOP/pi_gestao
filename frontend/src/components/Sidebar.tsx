@@ -16,7 +16,6 @@ const Sidebar = () => {
     { icon: <ShoppingCart className="w-5 h-5" />, label: "Vendas", path: "/vendas" },
     { icon: <FileText className="w-5 h-5" />, label: "Cadastros", path: "/product-entry" },
     { icon: <PlusSquare className="w-5 h-5" />, label: "Entradas", path: "/entradas" },
-    { icon: <MinusSquare className="w-5 h-5" />, label: "Saídas", path: "/saidas" },
     { icon: <FileCheck className="w-5 h-5" />, label: "Relatórios", path: "/relatorios" },
   ];
 

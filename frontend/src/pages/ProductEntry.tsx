@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Importe o hook useNavigate
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-// import Header from "@/components/Header";
 import { PackagePlus } from "lucide-react";
+import Header from "@/components/Header";
 
 const formSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -28,6 +30,20 @@ const formSchema = z.object({
 
 const ProductEntry = () => {
   const { toast } = useToast();
+  const navigate = useNavigate(); // Usando o hook useNavigate para redirecionamento
+
+  // Função para verificar se o usuário está logado
+  const isUserLoggedIn = () => {
+    const token = localStorage.getItem("access_token");
+    return token !== null && token !== undefined;
+  };
+
+  // Redirecionar para a página de login se o usuário não estiver logado
+  useEffect(() => {
+    if (!isUserLoggedIn()) {
+      navigate("/login"); // Substitua "/login" pelo caminho correto da sua página de login
+    }
+  }, [navigate]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,7 +84,6 @@ const ProductEntry = () => {
         });
         form.reset();
       } else {
-        console.log(response);
         toast({
           title: "Erro ao cadastrar produto",
           description: "Ocorreu um erro ao tentar adicionar o produto.",
@@ -86,7 +101,7 @@ const ProductEntry = () => {
 
   return (
     <div className="flex-1">
-      {/* <Header /> */}
+      <Header showSearchBar={false} />
       <main className="p-8 overflow-auto">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
@@ -154,7 +169,7 @@ const ProductEntry = () => {
                   )}
                 />
 
-                  <FormField
+                <FormField
                   control={form.control}
                   name="supplier"
                   render={({ field }) => (
@@ -188,7 +203,7 @@ const ProductEntry = () => {
                   )}
                 />
 
-                  <FormField
+                <FormField
                   control={form.control}
                   name="sale_price"
                   render={({ field }) => (

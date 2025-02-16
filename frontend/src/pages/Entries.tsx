@@ -19,101 +19,99 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShoppingCart } from "lucide-react";
+import { PackagePlus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/Header";
 
-interface Sale {
+interface Entry {
   id: number;
   product: string;
   quantity: number;
+  cost: number;
   date: string;
-  total_venda: number;
-  funcionario: string;
 }
 
-interface Product {
-  id: number;
-  name: string;
-}
-
-const Sales = () => {
+const Entries = () => {
   const { toast } = useToast();
-  const [sales, setSales] = useState<Sale[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [productSuggestions, setProductSuggestions] = useState<Product[]>([]);
-  const [newSale, setNewSale] = useState({
+  const [newEntry, setNewEntry] = useState({
     product: "",
     quantity: "",
-    total_venda: "",
-    funcionario: "",
+    cost: "",
   });
 
-  // Fetch para carregar vendas
-  const fetchSales = async () => {
+  // Fetch para carregar entradas
+  const fetchEntries = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/sales/");
-      if (!response.ok) throw new Error("Erro ao buscar vendas");
+      const response = await fetch("http://localhost:8000/api/entries/");
+      if (!response.ok) {
+        throw new Error("Erro ao carregar entradas");
+      }
       const data = await response.json();
-      setSales(data);
+      const sanitizedData = data.map((entry: any) => ({
+        ...entry,
+        cost: parseFloat(entry.cost) || 0, // Certifica que `cost` é um número
+      }));
+      setEntries(sanitizedData);
     } catch (error) {
-      toast({ title: "Erro", description: "Não foi possível carregar as vendas.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as entradas.",
+        variant: "destructive",
+      });
     }
   };
 
   useEffect(() => {
-    fetchSales();
+    fetchEntries();
   }, []);
 
   // Manipular entrada do formulário
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewSale((prev) => ({ ...prev, [name]: value }));
-
-    // Buscar sugestões se for o campo de produto
-    if (name === "product" && value.length > 1) {
-      fetchProductSuggestions(value);
-    } else {
-      setProductSuggestions([]); // Limpa sugestões se vazio
-    }
+    setNewEntry((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  // Buscar sugestões de produtos
-  const fetchProductSuggestions = async (query: string) => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/search/?q=${query}`);
-      if (!response.ok) throw new Error("Erro ao buscar produtos");
-      const data = await response.json();
-      setProductSuggestions(data);
-    } catch (error) {
-      toast({ title: "Erro", description: "Erro ao buscar produtos.", variant: "destructive" });
-    }
-  };
-
-  // Enviar venda para o backend
+  // Submeter nova entrada
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8000/api/sales/", {
+      const response = await fetch("http://localhost:8000/api/entries/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          ...newSale,
-          quantity: parseInt(newSale.quantity),
-          total_venda: parseFloat(newSale.total_venda),
+          ...newEntry,
+          quantity: parseInt(newEntry.quantity),
+          cost: parseFloat(newEntry.cost),
           date: new Date().toISOString(),
         }),
       });
-
-      if (!response.ok) throw new Error("Erro ao registrar venda");
-
-      const savedSale = await response.json();
-      setSales((prevSales) => [...prevSales, savedSale]);
-      toast({ title: "Venda registrada", description: `Venda do produto "${newSale.product}" salva com sucesso.` });
-
-      setNewSale({ product: "", quantity: "", total_venda: "", funcionario: "" });
-      setProductSuggestions([]);
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao registrar entrada");
+      }
+  
+      const savedEntry = await response.json();
+      setEntries((prevEntries) => [savedEntry, ...prevEntries]);
+      toast({
+        title: "Entrada registrada",
+        description: `Entrada do produto "${newEntry.product}" salva com sucesso.`,
+      });
+  
+      setNewEntry({ product: "", quantity: "", cost: "" });
     } catch (error) {
-      toast({ title: "Erro", description: "Não foi possível registrar a venda.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -123,17 +121,17 @@ const Sales = () => {
       <Header />
         <div className="max-w-6xl mx-auto mt-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Registro de Vendas</h1>
+            <h1 className="text-2xl font-bold">Registro de Entradas</h1>
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Nova Venda
+                  <PackagePlus className="mr-2 h-4 w-4" />
+                  Nova Entrada
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle>Registrar Nova Venda</DialogTitle>
+                  <DialogTitle>Registrar Nova Entrada</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid w-full items-center gap-1.5">
@@ -142,7 +140,7 @@ const Sales = () => {
                       type="text"
                       id="product"
                       name="product"
-                      value={newSale.product}
+                      value={newEntry.product}
                       onChange={handleInputChange}
                       required
                     />
@@ -152,7 +150,7 @@ const Sales = () => {
                           <li
                             key={product.id}
                             className="p-2 hover:bg-gray-100 cursor-pointer"
-                            onClick={() => setNewSale({ ...newSale, product: product.name })}
+                            onClick={() => setNewEntry({ ...newEntry, product: product.name })}
                           >
                             {product.name}
                           </li>
@@ -160,45 +158,33 @@ const Sales = () => {
                       </ul>
                     )}
                   </div>
-
                   <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="quantity">Quantidade</Label>
                     <Input
                       type="number"
                       id="quantity"
                       name="quantity"
-                      value={newSale.quantity}
+                      value={newEntry.quantity}
                       onChange={handleInputChange}
                       required
                       min="1"
                     />
                   </div>
                   <div className="grid w-full items-center gap-1.5">
-                    <Label htmlFor="total_venda">Valor Total</Label>
+                    <Label htmlFor="cost">Custo do Produto</Label>
                     <Input
                       type="number"
-                      id="total_venda"
-                      name="total_venda"
-                      value={newSale.total_venda}
+                      id="cost"
+                      name="cost"
+                      value={newEntry.cost}
                       onChange={handleInputChange}
                       required
                       step="0.01"
                       min="0"
                     />
                   </div>
-                  <div className="grid w-full items-center gap-1.5">
-                    <Label htmlFor="funcionario">Funcionário</Label>
-                    <Input
-                      type="text"
-                      id="funcionario"
-                      name="funcionario"
-                      value={newSale.funcionario}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
                   <Button type="submit" className="w-full">
-                    Salvar Venda
+                    Salvar Entrada
                   </Button>
                 </form>
               </DialogContent>
@@ -212,23 +198,23 @@ const Sales = () => {
                   <TableRow>
                     <TableHead>Produto</TableHead>
                     <TableHead>Quantidade</TableHead>
+                    <TableHead>Custo</TableHead>
                     <TableHead>Data</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Funcionário</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sales.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell>{sale.product}</TableCell>
-                      <TableCell>{sale.quantity}</TableCell>
+                  {entries.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell>{entry.product}</TableCell>
+                      <TableCell>{entry.quantity}</TableCell>
                       <TableCell>
-                        {format(new Date(sale.date), "dd/MM/yyyy HH:mm")}
+                        {typeof entry.cost === "number"
+                          ? `R$ ${entry.cost.toFixed(2)}`
+                          : "Valor não disponível"}
                       </TableCell>
                       <TableCell>
-                        {sale.total_venda ? `R$ ${Number(sale.total_venda).toFixed(2)}` : "Valor indisponível"}
+                        {format(new Date(entry.date), "dd/MM/yyyy HH:mm")}
                       </TableCell>
-                      <TableCell>{sale.funcionario}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -241,4 +227,4 @@ const Sales = () => {
   );
 };
 
-export default Sales;
+export default Entries;

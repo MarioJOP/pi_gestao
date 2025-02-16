@@ -34,7 +34,9 @@ const Login = () => {
 
       if (response.ok) {
         // Armazenar o token no localStorage
-        localStorage.setItem("token", data.token);
+        console.log('data', data)
+        localStorage.setItem("access_token", data.acess );
+        localStorage.setItem("refresh_token", data.refresh);
         setMessage("Login realizado com sucesso!");
 
         // Redirecionar para a página inicial protegida

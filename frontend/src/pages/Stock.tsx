@@ -13,12 +13,32 @@ import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/Header";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";  // UseNavigate para redirecionamento
 
 const Stock = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();  // Hook para navegação
   const [products, setProducts] = useState([]);
   const [editProduct, setEditProduct] = useState(null); // Produto em edição
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Controle do modal
+
+  // Função para verificar se o usuário está logado
+  const isUserLoggedIn = () => {
+    const token = localStorage.getItem("access_token");  // Ou qualquer outro método que você use para verificar o login
+    console.log('token', token)
+    console.log('token !== null', token !== null )
+    return token !== null && token !== undefined;
+  };
+  console.log('isUserLoggedIn', isUserLoggedIn())
+
+  // Redireciona para o login caso o usuário não esteja autenticado
+  useEffect(() => {
+    if (!isUserLoggedIn()) {
+      navigate("/login");  // Redireciona para a página de login
+    } else {
+      fetchProducts();
+    }
+  }, [navigate]);
 
   // Fetch produtos do backend
   const fetchProducts = async () => {
@@ -41,10 +61,6 @@ const Stock = () => {
       setProducts([]);
     }
   };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   // Excluir produto
   const handleDelete = async (productId: number) => {
@@ -219,7 +235,7 @@ const Stock = () => {
                   placeholder="Nome do produto"
                   value={editProduct.supplier}
                   onChange={(e) =>
-                    setEditProduct({ ...editProduct, name: e.target.value })
+                    setEditProduct({ ...editProduct, supplier: e.target.value })
                   }
                 />
               </div>

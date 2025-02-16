@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "api",
     "rest_framework",
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     "corsheaders"
 ]
 
@@ -77,6 +78,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # URL do seu frontend
     "http://localhost:8080",  # URL do frontend no ambiente local
     "http://192.168.0.109:8080",  # Caso esteja acessando o frontend pela rede
+    "http://localhost:8081",
 ]
 
 ROOT_URLCONF = "backend.urls"

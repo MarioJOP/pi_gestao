@@ -6,6 +6,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from .models import CustomUser
 from rest_framework import serializers
+from .models import Venda
+from .models import Entry
+
+class EntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Entry
+        fields = ["product", "quantity", "cost", "date"]
 
 User = get_user_model()  # Isso garantirá que o modelo de usuário personalizado seja usado
 
@@ -40,4 +47,22 @@ class ProdutoSerializer(serializers.ModelSerializer):
     def validate_preco(self, value):
         if value <= 0:
             raise serializers.ValidationError("O preço deve ser maior que 0.")
+        return value
+    
+
+class VendaSerializer(serializers.ModelSerializer):
+    total_venda = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        model = Venda
+        fields = '__all__'
+    
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("A quantidade deve ser maior que zero.")
+        return value
+
+    def validate_total_venda(self, value):
+        if value < 0:
+            raise serializers.ValidationError("O valor total não pode ser negativo.")
         return value

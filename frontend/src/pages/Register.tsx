@@ -36,7 +36,6 @@ const Register = () => {
 
       if (response.ok) {
         setMessage("Usuário cadastrado com sucesso!");
-        console.log("Response Data:", data);
         navigate("/login"); // Redirecionar para login após registro
       } else {
         setMessage(data.detail || "Algo deu errado. Tente novamente.");

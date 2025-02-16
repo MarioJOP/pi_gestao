@@ -20,4 +20,7 @@ export default defineConfig(({ mode }) => ({
   css: {
     postcss: "./postcss.config.js", // Aponte para o arquivo de configuração do PostCSS
   },
+  define: {
+    "process.env": {},
+  }
 }));

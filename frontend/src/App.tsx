@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute"; // Componente de rota protegida
 import "./index.css";
+import Entries from "./pages/Entries";
 
 function App() {
   return (
@@ -35,6 +36,8 @@ function App() {
                   <Route path="/dashboards" element={<Dashboards />} />
                   <Route path="/vendas" element={<Sales />} />
                   <Route path="/relatorios" element={<Reports />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/entradas" element={<Entries />} />
                 </Routes>
               </ProtectedRoute>
             }
